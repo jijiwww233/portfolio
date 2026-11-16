@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A portfolio, folded into paper boats.</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- 载入 -->
+<div class="loader mono" id="loader">
+  <pre id="loaderText">--INITIALIZING:</pre>
+  <pre id="loaderNum">[ 000 ]</pre>
+</div>
+
+<!-- 顶部导航 -->
+<header class="nav mono" id="nav">
+  <a class="nav-name cn" href="#top">陈宇彤</a>
+  <a class="nav-item" href="#work">WORK</a>
+  <a class="nav-item nav-cat" href="#cat-craft">CULTURE &amp; CRAFT</a>
+  <a class="nav-item nav-cat" href="#cat-place">PLACE &amp; WAYFINDING</a>
+  <a class="nav-item nav-cat" href="#cat-code">CODE &amp; FORM</a>
+  <a class="nav-item nav-cat" href="#cat-hand">HAND &amp; MATERIAL</a>
+  <button class="nav-item nav-sound mono" id="soundBtn" type="button">SOUND: OFF</button>
+</header>
+
+<!-- 一路跟着页面往下漂的小船 -->
+<canvas id="guide" aria-hidden="true"></canvas>
+
+<!-- 首屏：上面是白纸，往下一格一格化成一片蓝色的海，底部再化回白色 -->
+<section id="hero">
+  <a id="top"></a>
+  <div class="dots"></div>
+  <canvas id="sea"></canvas>
+
+  <div class="hero-copy">
+    <p class="kicker mono">--SELECTED WORKS 2024&mdash;2026--</p>
+    <h1 id="headline">A portfolio, folded into <span class="u">paper boats</span>.</h1>
+    <p class="sub cn">作品集，折成了纸船。</p>
+  </div>
+
+  <!-- 装饰小字 -->
+  <pre class="anno mono" style="left:34px; top:13vh">:--<span data-count="num">16</span> -/- BOATS:
+      :--RAIN
+      :--SEA
+      :--PAPER</pre>
+  <pre class="anno mono" style="right:34px; top:13vh" id="annoR">X:0000 Y:0000</pre>
+  <pre class="anno mono" style="right:34px; top:16.5vh">:--VIEW 45° -/- ORTHO:
+      :--HEIGHTFIELD
+      :--ASCII RASTER</pre>
+  <pre class="anno mono on-sea" style="left:34px; top:66vh">SYS-001
+--STATUS: AFLOAT</pre>
+  <pre class="anno mono on-sea" style="right:34px; top:72vh">--OUTCOME:
+  :--UNFOLD TO READ</pre>
+  <pre class="anno mono on-sea" style="left:34px; top:88vh">+ [SEC:SEA] ++++++++++++++++++ +</pre>
+
+  <p class="hint mono">MOVE TO STIR THE WATER &nbsp;/&nbsp; HOVER A BOAT &nbsp;/&nbsp; CLICK TO UNFOLD</p>
+
+  <div class="boat-label" id="boatLabel">
+    <div class="bl-no mono" id="blNo"></div>
+    <div class="bl-title" id="blTitle"></div>
+    <div class="bl-cn cn" id="blCn"></div>
+    <pre class="bl-specs mono" id="blSpecs"></pre>
+  </div>
+</section>
+
+<main class="page">
+
+  <!-- 一句话 -->
+  <section class="statement">
+    <pre class="mono side side-l">:--001 -/- NOTE:
+      :--ONE BOAT LEFT THE SEA
+      :--FOLLOW IT DOWN</pre>
+    <pre class="mono side side-r">X:0512 Y:0144
+--INDEX: BELOW</pre>
+    <h2 class="say" data-scramble><span data-count="word">Sixteen</span> projects, one paper boat each. Catch a boat and <span class="box">unfold</span> it, or <span class="u">follow the one</span> drifting down the page.</h2>
+    <p class="cn say-cn">每件作品一只纸船。捞一只摊开看，或者跟着漂下去的那只往下走。</p>
+    <pre class="mono side side-b">--DOCUMENTING DESIGN PROJECTS &amp; EXPERIMENTS--</pre>
+  </section>
+
+  <!-- 四个分类的模糊滚动大字 -->
+  <section class="marquee" aria-hidden="true">
+    <div class="mq" id="mq1">:: Culture &amp; Craft :: Place &amp; Wayfinding :: Code &amp; Form :: Hand &amp; Material :: Culture &amp; Craft :: Place &amp; Wayfinding :: Code &amp; Form :: Hand &amp; Material ::</div>
+    <div class="mq" id="mq2">:: Code &amp; Form :: Hand &amp; Material :: Culture &amp; Craft :: Place &amp; Wayfinding :: Code &amp; Form :: Hand &amp; Material :: Culture &amp; Craft :: Place &amp; Wayfinding ::</div>
+  </section>
+
+  <!-- 作品列表：由 js/works.js 里的数据生成，四个分类四种版式 -->
+  <section class="work" id="work">
+    <div class="sec-row mono">
+      <span>+ [SEC:WORK] ++++++++++++++++++++++++++++++++++++++++++++++++++ +</span>
+      <span>:--<span data-count="num">16</span> -/- 04 :</span>
+    </div>
+    <div id="workList"></div>
+  </section>
+
+</main>
+
+<!-- 页脚：又一片海，大字在水里，漂下来的小船最后进到这里 -->
+<footer class="sea-foot" id="seaFoot">
+  <canvas id="seaFootCanvas"></canvas>
+  <h2 class="vh">More boats on the way.</h2>
+  <pre class="anno mono" style="left:34px; top:4vh">:--END -/- OF LIST:
+      :--THE BOAT GOES BACK IN</pre>
+  <pre class="anno mono on-sea" style="right:34px; top:30vh">--STATUS: STILL FOLDING
+  :--STIR THE WATER, THE WORDS MOVE</pre>
+  <div class="foot-row mono">
+    <span class="cn">陈宇彤</span>
+    <span>PORTFOLIO 2024&mdash;2026</span>
+    <span>--EOF--</span>
+    <span>Inspired by bratiiev.com</span>
+  </div>
+</footer>
+
+<!-- 目录表里鼠标旁边浮出的小图 -->
+<div class="preview" id="preview" aria-hidden="true"><img id="previewImg" alt=""></div>
+
+<!-- 单个作品页 -->
+<div class="sheet" id="sheet" aria-hidden="true">
+  <button class="sheet-back mono" id="sheetBack" type="button">&larr; BACK (ESC)</button>
+  <div class="sheet-inner">
+    <aside class="sheet-meta">
+      <div class="mono sheet-no" id="shNo"></div>
+      <h2 class="sheet-title" id="shTitle"></h2>
+      <p class="cn sheet-cn" id="shCn"></p>
+      <p class="sheet-blurb" id="shBlurb"></p>
+      <pre class="mono sheet-specs" id="shSpecs"></pre>
+      <pre class="mono sheet-deco">--STATUS: UNFOLDED
+  :--CLICK A BOARD TO ZOOM</pre>
+    </aside>
+    <div class="sheet-boards" id="shBoards"></div>
+  </div>
+  <button class="sheet-next" id="shNext" type="button">
+    <span class="mono">NEXT &rarr;</span>
+    <span class="sheet-next-name" id="shNextName"></span>
+  </button>
+</div>
+
+<!-- 展板放大 -->
+<div class="zoom" id="zoom"><img id="zoomImg" alt=""></div>
+
+<script src="js/works.js"></script>
+<script src="js/main.js"></script>
+<script src="js/sea.js"></script>
+</body>
+</html>
