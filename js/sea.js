@@ -221,7 +221,7 @@
 
     var mx = -1, my = -1, pmx = -1, pmy = -1;
     var hovered = -1, labelFor = -1, touchArmed = -1, lastPointerType = 'mouse';
-    var unfold = null, sheetOpen = false;
+    var unfold = null, sheetOpen = SITE.isOpen();
 
     /* ---------- 布局 ---------- */
     function layout() {
@@ -684,20 +684,32 @@
     });
 
     // 作品页开 / 关时暂停 / 恢复
-    SITE.onOpen(function () { sheetOpen = true; });
+    SITE.onOpen(function () { sheetOpen = true; updateAnimation(); });
     SITE.onClose(function () {
       sheetOpen = false; unfold = null;
-      mx = my = pmx = pmy = -1; last = performance.now();
+      mx = my = pmx = pmy = -1; updateAnimation();
     });
 
     /* ---------- 每一帧 ---------- */
-    var last = performance.now();
+    var last = 0, seaFrame = 0, inView = !('IntersectionObserver' in window);
+    function updateAnimation() {
+      if (ready && inView && !sheetOpen) {
+        if (!seaFrame) {
+          last = performance.now();
+          seaFrame = requestAnimationFrame(frame);
+        }
+      } else if (seaFrame) {
+        cancelAnimationFrame(seaFrame);
+        seaFrame = 0;
+      }
+    }
     function frame(now) {
-      requestAnimationFrame(frame);
+      seaFrame = requestAnimationFrame(frame);
       var dt = Math.min(0.05, Math.max(0, (now - last) / 1000)); last = now;
-      if (!ready || sheetOpen) return;
-      var rect = root.getBoundingClientRect();
-      if (rect.bottom < 0 || rect.top > (window.innerHeight || 0)) return;     // 不在屏幕里就不画
+      if (!('IntersectionObserver' in window)) {
+        var rect = root.getBoundingClientRect();
+        if (rect.bottom < 0 || rect.top > window.innerHeight) return;
+      }
 
       simStep(); simStep();
       cg.fill(0); cbg.fill(0); isBlue.fill(0); owner.fill(-1); R.clear();
@@ -733,7 +745,16 @@
 
     return {
       root: root,
-      start: function () { layout(); requestAnimationFrame(frame); },
+      start: function () {
+        layout();
+        if ('IntersectionObserver' in window) {
+          new IntersectionObserver(function (entries) {
+            inView = entries[0].isIntersecting;
+            updateAnimation();
+          }).observe(root);
+        }
+        updateAnimation();
+      },
       ready: function () { return ready; },
       metrics: function () { return M; },
       // 蓝色水面在屏幕上的上下范围
@@ -803,6 +824,7 @@
     var GC = 60, GR = 30, OR = GR * 0.66, m = null;
     var kind = new Uint8Array(GC * GR), shadeOf = new Uint8Array(GC * GR);
     var lastY = window.pageYOffset || 0, vel = 0, lastT = performance.now(), phase = 0, inFoot = false, outOfHero = false;
+    var guideFrame = 0, lastDraw = 0, visible = false, lastTransform = '';
 
     function setup() {
       m = hero.metrics();
@@ -818,8 +840,21 @@
       g.fillText(ch, c * m.cwD + m.cwD / 2, r * m.chD + m.chD / 2);
     }
 
-    (function frame(now) {
-      requestAnimationFrame(frame);
+    function updateGuide() {
+      if (!SITE.isOpen() && !guideFrame) {
+        lastT = performance.now();
+        lastY = window.pageYOffset || 0;
+        vel = 0;
+        guideFrame = requestAnimationFrame(frame);
+      } else if (SITE.isOpen() && guideFrame) {
+        cancelAnimationFrame(guideFrame);
+        guideFrame = 0;
+        visible = false;
+        cv.style.opacity = 0;
+      }
+    }
+    function frame(now) {
+      guideFrame = requestAnimationFrame(frame);
       var dt = Math.min(0.05, Math.max(0.001, (now - lastT) / 1000)); lastT = now;
       if (!hero.ready() || !foot.ready()) return;
       if (m !== hero.metrics()) setup();
@@ -843,11 +878,21 @@
         var hr = hero.root.getBoundingClientRect();
         if (hr.bottom > 0 && hr.top < vh) hero.splash(gx - hr.left);
       }
-      var vis = out && gy < fb.top && !SITE.isOpen();
-      cv.style.opacity = vis ? 1 : 0;
+      var vis = out && gy < fb.top;
+      if (vis !== visible) {
+        visible = vis;
+        cv.style.opacity = vis ? 1 : 0;
+        lastDraw = 0;
+      }
       if (!vis) return;
 
+      var transform = 'translate(' + Math.round(gx - GC * m.cwC / 2) + 'px,' + Math.round(gy - OR * m.chC) + 'px)';
+      if (transform !== lastTransform) { cv.style.transform = transform; lastTransform = transform; }
       phase += dt;
+      // 船的位置随滚动更新，字符只需每秒重绘约 30 次。
+      var interval = 1000 / 30;
+      if (lastDraw && now - lastDraw < interval) return;
+      lastDraw = lastDraw ? now - ((now - lastDraw) % interval) : now;
       var slope = vw * amp * Math.cos(p * Math.PI * 3 + 0.5) * Math.PI * 3 / span;     // 横向 / 纵向
       // 和海里的船同一个角度（侧着看：两头尖的船身 + 中间的三角），只是顺着漂的方向稍微偏一点
       var yaw = clamp(slope * 0.7, -0.5, 0.5) + Math.sin(phase * 0.9) * 0.06;
@@ -887,8 +932,10 @@
         }
       }
       g.globalAlpha = 1;
-      cv.style.transform = 'translate(' + Math.round(gx - GC * m.cwC / 2) + 'px,' + Math.round(gy - OR * m.chC) + 'px)';
-    })(lastT);
+    }
+    SITE.onOpen(updateGuide);
+    SITE.onClose(updateGuide);
+    updateGuide();
   }
 
   /* ---------- 启动 ---------- */

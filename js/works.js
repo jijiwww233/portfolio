@@ -9,6 +9,7 @@
    · order：  （可选）在自己那一类里排第几。现在是按颜色排的：相近的颜色挨在一起。
    · full：   （可选）点击放大时用的更清晰的原图，和 images 一一对应。
    · thumb：  （可选）列表里的小缩略图，不写就用 images 的第一张。
+   · boardCrops：可选，每张展板的 [原图宽, 裁剪顶部, 裁剪后宽, 裁剪后高]，单位为像素。
    · course 留空的不会显示，等你补。
    ============================================================ */
 
@@ -56,6 +57,7 @@ var WORKS = [
     tags: ["CRAFT RESEARCH", "INFOGRAPHIC", "3 BOARDS"],
     blurb: "Three boards on Hakka thread-wrapped flowers: what they are made of, what the motifs mean, and where the craft can go next.",
     images: ["缠花26.webp", "缠花26年.webp", "缠花26（3）.webp"],
+    boardCrops: [[1080, 378, 1080, 1932], [1203, 28, 1080, 1944], [1081, 32, 1080, 1948]],
     thumb: "thumbs/缠花26.webp",
     videos: []
   },

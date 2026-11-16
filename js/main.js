@@ -386,7 +386,19 @@
      滚动：导航压在蓝色上时变白字、模糊大字跟着滚
      ============================================================ */
   var nav = $('nav'), m1 = $('mq1'), m2 = $('mq2');
+  var marqueeVisible = true, scrollFrame = 0;
+  function scheduleScroll() {
+    if (scrollFrame) return;
+    scrollFrame = requestAnimationFrame(onScroll);
+  }
+  if (m1 && !reduce && 'IntersectionObserver' in window) {
+    new IntersectionObserver(function (entries) {
+      marqueeVisible = entries[0].isIntersecting;
+      scheduleScroll();
+    }).observe(m1.parentElement);
+  }
   function onScroll() {
+    scrollFrame = 0;
     var y = window.pageYOffset || 0, seas = window.__seas || [], blue = false, i, r;
     for (i = 0; i < seas.length; i++) {
       if (!seas[i].ready()) continue;
@@ -394,19 +406,31 @@
       if (22 > r.top && 22 < r.bottom) blue = true;
     }
     if (nav) nav.classList.toggle('on-blue', blue);
-    if (m1 && !reduce) {
+    if (m1 && !reduce && marqueeVisible) {
       m1.style.transform = 'translateX(' + (-y * 0.35) + 'px)';
       m2.style.transform = 'translateX(' + (y * 0.35 - 1400) + 'px)';
     }
   }
-  window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', function () { setTimeout(onScroll, 300); });
-  setTimeout(onScroll, 1500);
+  window.addEventListener('scroll', scheduleScroll, { passive: true });
+  window.addEventListener('resize', function () { setTimeout(scheduleScroll, 300); });
+  setTimeout(scheduleScroll, 1500);
 
   /* ============================================================
      作品页（盖在首页上面的一层；浏览器的后退键可以关掉它）
      ============================================================ */
-  var sheet = $('sheet'), zoom = $('zoom');
+  var sheet = $('sheet'), zoom = $('zoom'), zoomBoard = $('zoomBoard'), zoomImg = $('zoomImg');
+  function setBoardCrop(frame, crop) {
+    frame.classList.toggle('board-crop', !!crop);
+    if (!crop) {
+      frame.removeAttribute('style');
+      return;
+    }
+    var width = crop[2];
+    frame.style.setProperty('--board-width', width + 'px');
+    frame.style.setProperty('--board-ratio', width + ' / ' + crop[3]);
+    frame.style.setProperty('--image-width', (crop[0] / width * 100) + '%');
+    frame.style.setProperty('--image-top', (-crop[1] / crop[3] * 100) + '%');
+  }
   var openIdx = -1, pushed = false, openCbs = [], closeCbs = [];
   SITE.onOpen = function (f) { openCbs.push(f); };
   SITE.onClose = function (f) { closeCbs.push(f); };
@@ -430,11 +454,21 @@
       var im = el('img'); im.alt = w.en + ' — board ' + (k + 1);
       im.decoding = 'async'; if (k > 0) im.loading = 'lazy';
       im.src = src(name); im.title = 'CLICK TO ZOOM';
+      var crop = w.boardCrops && w.boardCrops[k];
+      var full = w.full && w.full[k];
       im.addEventListener('click', function () {
-        var full = (w.full && w.full[k]) ? encodeURI(w.full[k]) : im.src;   // 有更清晰的版本就放大时再加载
-        $('zoomImg').src = full; zoom.classList.add('open');
+        setBoardCrop(zoomBoard, full ? null : crop);
+        zoomImg.alt = im.alt;
+        zoomImg.src = full ? encodeURI(full) : im.src;
+        zoom.classList.add('open');
+        zoom.scrollTop = zoom.scrollLeft = 0;
       });
-      boards.appendChild(im);
+      if (crop) {
+        var frame = el('div');
+        setBoardCrop(frame, crop);
+        frame.appendChild(im);
+        boards.appendChild(frame);
+      } else boards.appendChild(im);
     });
     $('shNextName').textContent = WORKS[next].en;
     $('shNext').onclick = function () { SITE.sfx('click'); SITE.openWork(next); };
